@@ -165,3 +165,4 @@ Puis dans la requête Stats, utilisez automatiquement `{{admin_token}}` dans le 
 3. **Données en temps réel**: Les statistiques sont calculées à partir des données actuelles de la base de données
 4. **Performance**: Si vous avez beaucoup de données, cette requête peut prendre quelques secondes
 
+

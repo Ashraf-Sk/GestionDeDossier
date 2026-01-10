@@ -1,10 +1,19 @@
 package app.fichier.Service;
 
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import app.fichier.DTO.ClusterFeature;
+import app.fichier.DTO.ClusterResponse;
+import app.fichier.DTO.Geometry;
+import app.fichier.DTO.Propreties;
 import app.fichier.DTO.StatsResponse;
 import app.fichier.Entity.Status;
 import app.fichier.repositry.CommuneRepo;
@@ -17,6 +26,7 @@ public class StatsService {
 
     private final DemandeRepo demandeRepo;
     private final CommuneRepo communeRepo;
+    private final ObjectMapper mapper;
 
     public StatsResponse getStats() {
         Map<String, Long> parCommune = communeRepo.countDemandesByCommune()
@@ -45,4 +55,33 @@ public class StatsService {
             parType
         );
     }
+    public ClusterResponse getCluster(){
+        List<Object[]> rows = communeRepo.getCommuneClusterCentroid();
+        List<ClusterFeature> features = rows.stream().map(this::fromCommune).toList();
+        return new ClusterResponse("Features", features);
+    }
+    private ClusterFeature fromCommune(Object[] row){
+        String code = (String) row[0];
+        String nom = (String) row[1];
+        Long count = ((Number) row[2]).longValue();
+        String centroid = (String) row[3];
+        Propreties props = new Propreties(nom, count);
+        Geometry geom = new Geometry("Point", parse(centroid));
+        return new ClusterFeature("Feature",props, geom
+        );
+    }
+    private double[] parse(String json){
+        try{
+            JsonNode root = mapper.readTree(json);
+            JsonNode coordinate = root.path("coordinates");
+            if(coordinate.isArray() && coordinate.size() == 2){
+                return new double[]{coordinate.get(0).asDouble(), coordinate.get(1).asDouble()};
+            }
+            return new double[]{0.0, 0.0};
+        }
+        catch( Exception e){
+            return new double[]{0.0, 0.0};
+        }
+    }
+  
 }

@@ -62,10 +62,6 @@ public class DemandeService {
       GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
       Point point = factory.createPoint(new Coordinate(requete.longitude(), requete.latitude()));
       
-      // TODO: Réactiver une fois la colonne geom ajoutée à la table communes
-      // Commune commune = communeRepo.calculateIntersection(point);
-      // demande.setCommune(commune);
-      
       try {
           Commune commune = communeRepo.calculateIntersection(point);
           demande.setCommune(commune);
@@ -74,7 +70,6 @@ public class DemandeService {
                    requete.longitude(), requete.latitude(), e.getMessage());
           demande.setCommune(null);
       }
-      
       demande.setPointGemotrique(point);
       demandeRepo.saveAndFlush(demande);
       demande = demandeRepo.findById(demande.getId()).orElse(demande);
@@ -102,7 +97,14 @@ public class DemandeService {
         demande.getId(), 
         demande.getDateCreation(),
         documents,
-        null
+        null,
+        demande.getUtilisateur().getNom(),
+        demande.getUtilisateur().getPrenom(),
+        demande.getCommune().getNomCommune(),
+        demande.getPointGemotrique().getY(),
+        demande.getPointGemotrique().getX(),
+        demande.getCin(),
+        demande.getTypeAutorisation()
       );
      }
 
@@ -124,7 +126,14 @@ public class DemandeService {
         demande.getId(),
         demande.getDateCreation(),
         documents,
-        demande.getMotifRejet()
+        demande.getMotifRejet(),
+        demande.getUtilisateur().getNom(),
+        demande.getUtilisateur().getPrenom(),
+        demande.getCommune().getNomCommune(),
+        demande.getPointGemotrique().getY(),
+        demande.getPointGemotrique().getX(),
+        demande.getCin(),
+        demande.getTypeAutorisation()
       );
     }
     @PreAuthorize("hasRole('ADMIN')")

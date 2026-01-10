@@ -26,6 +26,17 @@ public interface CommuneRepo extends JpaRepository<Commune, String>{
              select c.* From communes c  where ST_Intersects(c.geom, :point) order by ST_Area(ST_Intersection(c.geom, :point)) desc limit 1
              """, nativeQuery = true)
      Commune calculateIntersection(@Param("point") Point point);
+
+     @Query(value="""
+             select c.code_commu, c.nom_commun, COUNT(d.id) as count,
+             ST_AsGeoJSON(ST_Centroid(c.geom)) as centroid
+                   from communes c left join demande d ON d.demande_commune = c.code_commu
+                   where c.geom is not null
+                   group by c.code_commu, c.nom_commun, c.geom
+                   having count(d.id) > 0
+                   order by count
+             """, nativeQuery = true)
+             List<Object[]> getCommuneClusterCentroid();
     
 
 }
