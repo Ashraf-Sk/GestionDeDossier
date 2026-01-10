@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import app.fichier.DTO.ClusterResponse;
 import app.fichier.DTO.StatsResponse;
 import app.fichier.Service.StatsService;
 import lombok.RequiredArgsConstructor;
@@ -20,5 +21,10 @@ public class StatsController {
     public ResponseEntity<StatsResponse> getStats(){
         var stats = service.getStats();
         return ResponseEntity.ok(stats);
+    }
+    @GetMapping("/getCentroid")
+    public ResponseEntity<ClusterResponse> getCentroid(){
+        ClusterResponse cluster = service.getCluster();
+        return ResponseEntity.ok(cluster);
     }
 }
