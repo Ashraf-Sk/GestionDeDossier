@@ -43,6 +43,8 @@ public class AuthenticationManagerService {
         else{
             Utilisateur utilisateur = new Utilisateur();
             utilisateur.setEmail(requete.email());
+            utilisateur.setNom(requete.nom());
+            utilisateur.setPrenom(requete.prenom());
             utilisateur.setPassword(passwordEncoder.encode(requete.password()));
             utilisateur.setRoles(List.of(roleRepo.findByRole("ROLE_USER").get()));
             userRepo.save(utilisateur);

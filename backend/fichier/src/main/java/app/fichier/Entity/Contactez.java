@@ -2,6 +2,7 @@ package app.fichier.Entity;
 
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -26,6 +27,8 @@ public class Contactez extends BaseAuditing{
     private String nom;
     private String email;
     private String message;
+    @Column(name="sujet")
+    private String sujet;
     private LocalDateTime dateCreation;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="utilisateur_id")

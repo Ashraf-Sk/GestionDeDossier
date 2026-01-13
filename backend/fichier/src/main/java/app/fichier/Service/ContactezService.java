@@ -17,6 +17,7 @@ public class ContactezService {
         contactez.setEmail(utilisateur.getEmail());
         contactez.setNom(utilisateur.getNom());
         contactez.setMessage(request.message());
+        contactez.setSujet(request.sujet());
         contactezRepo.save(contactez);
         return "Contactez créé avec succès";
     }
