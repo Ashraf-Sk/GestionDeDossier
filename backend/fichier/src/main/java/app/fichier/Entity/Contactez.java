@@ -29,6 +29,7 @@ public class Contactez extends BaseAuditing{
     private String message;
     @Column(name="sujet")
     private String sujet;
+    @Column(name="dateCreation", nullable = false)
     private LocalDateTime dateCreation;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="utilisateur_id")

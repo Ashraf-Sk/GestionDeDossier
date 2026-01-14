@@ -16,9 +16,11 @@ import app.fichier.Utils.JwtUtils;
 import app.fichier.repositry.RoleRepo;
 import app.fichier.repositry.UtilisateurRepo;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class AuthenticationManagerService {
 
     private final RoleRepo roleRepo;
@@ -26,29 +28,70 @@ public class AuthenticationManagerService {
     private final JwtUtils jwtUtils;
     private final UtilisateurRepo userRepo;
     private final PasswordEncoder passwordEncoder;
+    
     public String generateTokenAfterAutentication(LoginRequete requete){
-        Authentication authentication = authenticationManager.authenticate(new 
-        UsernamePasswordAuthenticationToken(requete.email(), requete.password()) 
-        );
-        if(authentication.isAuthenticated()){
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            return jwtUtils.generateToken(authentication, 3600000L);
+        log.debug("Début de l'authentification pour l'email: {}", requete.email());
+        try {
+            Authentication authentication = authenticationManager.authenticate(new 
+                UsernamePasswordAuthenticationToken(requete.email(), requete.password()) 
+            );
+            log.debug("Authentification réussie pour l'email: {}, isAuthenticated: {}", 
+                    requete.email(), authentication.isAuthenticated());
+            if(authentication.isAuthenticated()){
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                String token = jwtUtils.generateToken(authentication, 3600000L);
+                log.debug("Token JWT généré avec succès pour l'email: {}", requete.email());
+                return token;
+            }
+            log.warn("Authentification échouée pour l'email: {} - isAuthenticated = false", requete.email());
+            return "";
+        } catch (Exception e) {
+            log.error("Erreur lors de l'authentification pour l'email: {} - Exception: {} - Message: {}", 
+                    requete.email(), e.getClass().getSimpleName(), e.getMessage(), e);
+            throw e;
         }
-        return "";
     }
+    
     public String createUser(RegisterRequete requete){
-        if(userRepo.findByEmail(requete.email()).isPresent()){
-            return "email est deja présent";
-        }
-        else{
+        log.debug("Début de la création d'utilisateur pour l'email: {}", requete.email());
+        try {
+            // Vérifier si l'email existe déjà
+            if(userRepo.findByEmail(requete.email()).isPresent()){
+                log.warn("Tentative d'inscription avec un email déjà existant: {}", requete.email());
+                throw new IllegalArgumentException("Email déjà utilisé");
+            }
+            log.debug("Email {} n'existe pas encore, vérification du rôle ROLE_USER", requete.email());
+            
+            // Vérifier si le rôle ROLE_USER existe
+            var roleUser = roleRepo.findByRole("ROLE_USER")
+                .orElseThrow(() -> {
+                    log.error("Le rôle ROLE_USER n'existe pas dans la base de données");
+                    return new IllegalStateException("Rôle ROLE_USER n'existe pas dans la base de données");
+                });
+            log.debug("Rôle ROLE_USER trouvé avec succès");
+            
+            // Créer l'utilisateur
             Utilisateur utilisateur = new Utilisateur();
             utilisateur.setEmail(requete.email());
             utilisateur.setNom(requete.nom());
             utilisateur.setPrenom(requete.prenom());
-            utilisateur.setPassword(passwordEncoder.encode(requete.password()));
-            utilisateur.setRoles(List.of(roleRepo.findByRole("ROLE_USER").get()));
+            utilisateur.setCin(requete.cin());
+            String encodedPassword = passwordEncoder.encode(requete.password());
+            utilisateur.setPassword(encodedPassword);
+            utilisateur.setRoles(List.of(roleUser));
+            
+            log.debug("Sauvegarde de l'utilisateur dans la base de données pour l'email: {}", requete.email());
             userRepo.save(utilisateur);
-            return "utilisateur enregistre";
+            log.info("Utilisateur créé avec succès pour l'email: {}", requete.email());
+            return "Utilisateur créé avec succès";
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            log.error("Erreur de validation lors de la création d'utilisateur pour l'email: {} - Exception: {} - Message: {}", 
+                    requete.email(), e.getClass().getSimpleName(), e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Erreur inattendue lors de la création d'utilisateur pour l'email: {} - Exception: {} - Message: {}", 
+                    requete.email(), e.getClass().getSimpleName(), e.getMessage(), e);
+            throw e;
         }
     }
 

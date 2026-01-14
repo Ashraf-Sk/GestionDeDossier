@@ -38,14 +38,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfiguration()))
+            .csrf(csrf -> csrf.disable()) 
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/demande/**").permitAll()
                 .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/stats/**").hasRole("ADMIN")
+                .requestMatchers("/admin/**").hasRole("ADMIN") 
                 .anyRequest().authenticated()
-            ).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            ).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).cors(cors -> cors.configurationSource(corsConfiguration()))
             .addFilterBefore(intercepteur, UsernamePasswordAuthenticationFilter.class)
             ;
         return http.build();
@@ -57,22 +56,15 @@ public class SecurityConfig {
     @Bean 
     public CorsConfigurationSource corsConfiguration(){
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of(
-            "http://localhost:*",
-            "http://127.0.0.1:*"
-        ));
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowCredentials(true);
         config.setAllowedHeaders(List.of("*"));
-        // Méthodes HTTP autorisées
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        // Exposer les headers personnalisés si nécessaire
-        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         var url = new UrlBasedCorsConfigurationSource();
         url.registerCorsConfiguration("/**", config);
         return url;
     }
 }
-
 
 
 

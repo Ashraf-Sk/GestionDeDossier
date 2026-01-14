@@ -1,0 +1,20 @@
+📱 PLACEHOLDER IMAGE - Adaptive Icon
+
+Ceci est un placeholder pour l'icône adaptative Android.
+
+Spécifications requises :
+- Taille : 1024x1024 pixels
+- Format : PNG avec transparence
+- Nom du fichier : adaptive-icon.png
+- Zone de sécurité : Cercle de 640px de diamètre au centre
+
+Design recommandé :
+- Éléments importants dans le cercle central
+- Peut déborder sur les bords (pour effets)
+- Testé avec masques circulaires et carrés
+
+Android affiche cette icône avec différents masques :
+- Cercle
+- Carré arrondi
+- Larme
+- Et autres formes selon le fabricant

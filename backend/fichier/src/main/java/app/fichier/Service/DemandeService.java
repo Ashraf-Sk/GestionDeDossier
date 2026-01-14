@@ -72,7 +72,27 @@ public class DemandeService {
       }
       demande.setPointGemotrique(point);
       demandeRepo.saveAndFlush(demande);
+      
+      // Recharger la demande avec toutes ses relations pour s'assurer que la commune est chargée
       demande = demandeRepo.findById(demande.getId()).orElse(demande);
+      
+      // Forcer le chargement de la commune si elle existe
+      if (demande.getCommune() != null) {
+        // Accéder à la commune pour forcer le chargement
+        String codeCommune = demande.getCommune().getCodeCommune();
+        log.debug("Code commune chargé: {}", codeCommune);
+      }
+      
+      // Log pour diagnostiquer le problème de commune
+      log.info("=== CREATION DEMANDE - Demande créée: {}", demande.getId());
+      if (demande.getCommune() != null) {
+        log.info("=== Commune trouvée - Code: {}, Nom: {}", 
+                 demande.getCommune().getCodeCommune(), 
+                 demande.getCommune().getNomCommune());
+      } else {
+        log.warn("=== ATTENTION: La commune est NULL pour la demande {} - Vérifiez que demande_commune correspond à un code_commu existant", demande.getId());
+      }
+      
       List<DocumentResponse> documents = new ArrayList<>();
       List<MultipartFile> files = requete.fichiers();
       if(files != null && !files.isEmpty()){
@@ -92,6 +112,13 @@ public class DemandeService {
         }
       }
     
+      String nomCommune = "Non déterminée";
+      if (demande.getCommune() != null && demande.getCommune().getNomCommune() != null) {
+        nomCommune = demande.getCommune().getNomCommune();
+      } else {
+        log.warn("Commune ou nomCommune est null pour la demande {}", demande.getId());
+      }
+      
       return new DemandeReponse(
         demande.getStatus().toString(),
         demande.getId(), 
@@ -100,7 +127,7 @@ public class DemandeService {
         null,
         demande.getUtilisateur().getNom(),
         demande.getUtilisateur().getPrenom(),
-        demande.getCommune().getNomCommune(),
+        nomCommune,
         demande.getPointGemotrique().getY(),
         demande.getPointGemotrique().getX(),
         demande.getCin(),
@@ -117,10 +144,29 @@ public class DemandeService {
 
     public DemandeReponse trackDemnande(String id, String cin, Utilisateur utilisateur){
       Demande demande = demandeRepo.findByIdAndCinAndUtilisateur(id, cin, utilisateur).get();
+      
+      // Log pour diagnostiquer le problème de commune
+      log.info("=== TRACK DEMANDE - Demande trouvée: {}", demande.getId());
+      if (demande.getCommune() != null) {
+        log.info("=== Commune trouvée - Code: {}, Nom: {}", 
+                 demande.getCommune().getCodeCommune(), 
+                 demande.getCommune().getNomCommune());
+      } else {
+        log.warn("=== ATTENTION: La commune est NULL pour la demande {}", demande.getId());
+      }
+      
         List<DocumentResponse> documents = demande.getDocuments()
         .stream()
         .map(document -> new DocumentResponse(document.getId(), document.getNomFichier()))
         .collect(Collectors.toList());
+      
+      String nomCommune = "Non déterminée";
+      if (demande.getCommune() != null && demande.getCommune().getNomCommune() != null) {
+        nomCommune = demande.getCommune().getNomCommune();
+      } else {
+        log.warn("Commune ou nomCommune est null pour la demande {}", demande.getId());
+      }
+      
       return new DemandeReponse(
         demande.getStatus().toString(),
         demande.getId(),
@@ -129,7 +175,7 @@ public class DemandeService {
         demande.getMotifRejet(),
         demande.getUtilisateur().getNom(),
         demande.getUtilisateur().getPrenom(),
-        demande.getCommune().getNomCommune(),
+        nomCommune,
         demande.getPointGemotrique().getY(),
         demande.getPointGemotrique().getX(),
         demande.getCin(),

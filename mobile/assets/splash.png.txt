@@ -1,0 +1,20 @@
+📱 PLACEHOLDER IMAGE - Splash Screen
+
+Ceci est un placeholder pour l'écran de démarrage.
+
+Spécifications requises :
+- Taille : 1242x2436 pixels (iPhone 11 Pro Max)
+- Format : PNG
+- Nom du fichier : splash.png
+
+Design recommandé :
+- Fond : Couleur de marque ou dégradé
+- Logo/Icône au centre
+- Texte de l'app si nécessaire
+- Design simple et élégant
+
+Pour créer votre splash screen :
+1. Design en 1242x2436
+2. Centrer les éléments importants
+3. Zone de sécurité : 20% des bords
+4. Exporter et remplacer ce fichier

@@ -1,0 +1,17 @@
+📱 PLACEHOLDER IMAGE - Favicon
+
+Ceci est un placeholder pour le favicon web.
+
+Spécifications requises :
+- Taille : 48x48 pixels
+- Format : PNG
+- Nom du fichier : favicon.png
+
+Design recommandé :
+- Version simplifiée de l'icône principale
+- Visible même en très petit
+- Couleurs contrastées
+
+Utilisation :
+- Version web de l'application
+- Onglet du navigateur

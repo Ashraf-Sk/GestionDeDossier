@@ -1,5 +1,7 @@
 package app.fichier.Service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,8 @@ public class ContactezService {
         contactez.setNom(utilisateur.getNom());
         contactez.setMessage(request.message());
         contactez.setSujet(request.sujet());
+        contactez.setDateCreation(LocalDateTime.now());
+        contactez.setUtilisateur(utilisateur);
         contactezRepo.save(contactez);
         return "Contactez créé avec succès";
     }

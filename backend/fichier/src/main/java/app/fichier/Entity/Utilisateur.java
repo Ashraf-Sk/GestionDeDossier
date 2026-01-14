@@ -26,10 +26,12 @@ public class Utilisateur {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name="nom")
+    @Column(name="nom", nullable = true)
     private String nom;
-    @Column(name="prenom")
+    @Column(name="prenom", nullable = true)
     private String prenom;
+    @Column(name="CIN", nullable = true)
+    private String cin;
     @Column(name="email")
     private String email;
     @Column(name="password")

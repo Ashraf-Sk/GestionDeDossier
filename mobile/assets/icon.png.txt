@@ -1,0 +1,19 @@
+📱 PLACEHOLDER IMAGE - Icon
+
+Ceci est un placeholder pour l'icône de l'application.
+
+Spécifications requises :
+- Taille : 1024x1024 pixels
+- Format : PNG avec transparence
+- Nom du fichier : icon.png
+
+Design recommandé :
+- Utiliser les couleurs de la marque (#2196F3)
+- Icône simple et reconnaissable
+- Fonctionne en petit et grand format
+
+Pour générer vos icônes :
+1. Créer le design dans Figma/Illustrator
+2. Exporter en 1024x1024 PNG
+3. Remplacer ce fichier
+4. Exécuter : expo optimize
