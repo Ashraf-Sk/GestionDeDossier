@@ -33,7 +33,7 @@ public class inter extends OncePerRequestFilter{
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         
-        // Ignorer les requêtes OPTIONS (CORS preflight)
+        // Ignorer les requêtes OPTIONS (CORS preflight) - Spring Security gère CORS
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;

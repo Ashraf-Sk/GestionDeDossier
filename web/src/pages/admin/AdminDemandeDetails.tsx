@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { demandeService } from '../../services/demandeService';
 import { AdminDetailsDemande, DemandeStatus } from '../../types';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { ArrowLeft, CheckCircle, XCircle, FileText } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, FileText, Download, Eye } from 'lucide-react';
 import { getDemandeTypeInfo } from '../../config/demandeTypes';
 import DemandeTypeBadge from '../../components/DemandeTypeBadge';
 
@@ -15,6 +15,7 @@ export default function AdminDemandeDetails() {
   const [updating, setUpdating] = useState(false);
   const [newStatus, setNewStatus] = useState<DemandeStatus>('EN_ATTENTE');
   const [motifRejet, setMotifRejet] = useState('');
+  const [downloadingDoc, setDownloadingDoc] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -50,6 +51,57 @@ export default function AdminDemandeDetails() {
       alert('Erreur lors de la mise à jour: ' + (err.response?.data?.message || err.message));
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleDownloadDocument = async (documentId: string, fileName: string, openInNewTab: boolean = false) => {
+    try {
+      setDownloadingDoc(documentId);
+      const blob = await demandeService.downloadDocumentAsAdmin(documentId);
+      
+      // Vérifier si le blob est vide ou si c'est une erreur (par exemple, un message d'erreur en JSON)
+      if (blob.size === 0) {
+        throw new Error('Le document est vide');
+      }
+      
+      // Créer une URL pour le blob
+      const url = window.URL.createObjectURL(blob);
+      
+      if (openInNewTab) {
+        // Ouvrir dans un nouvel onglet
+        window.open(url, '_blank');
+      } else {
+        // Télécharger le fichier
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName || 'document.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        // Nettoyer l'URL après un délai
+        setTimeout(() => window.URL.revokeObjectURL(url), 100);
+      }
+    } catch (err: any) {
+      console.error('Erreur lors du téléchargement:', err);
+      let errorMessage = 'Erreur lors du téléchargement du document';
+      
+      if (err.response?.status === 404) {
+        errorMessage = 'Document introuvable. Le fichier peut avoir été supprimé ou déplacé.';
+      } else if (err.response?.data) {
+        // Essayer de lire le message d'erreur depuis le blob si c'est du texte
+        try {
+          const text = await err.response.data.text();
+          errorMessage = text || errorMessage;
+        } catch {
+          errorMessage = err.response.data.message || errorMessage;
+        }
+      } else {
+        errorMessage = err.message || errorMessage;
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setDownloadingDoc(null);
     }
   };
 
@@ -171,7 +223,35 @@ export default function AdminDemandeDetails() {
                     <div className="bg-blue-100 p-2 rounded-lg">
                       <FileText className="w-5 h-5 text-blue-600" />
                     </div>
-                    <span className="text-sm font-medium text-gray-700 flex-1">{doc.NomFichier}</span>
+                    <span className="text-sm font-medium text-gray-700 flex-1 truncate" title={doc.NomFichier}>
+                      {doc.NomFichier}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleDownloadDocument(doc.idFichier, doc.NomFichier, true)}
+                        disabled={downloadingDoc === doc.idFichier}
+                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Ouvrir le PDF"
+                      >
+                        {downloadingDoc === doc.idFichier ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleDownloadDocument(doc.idFichier, doc.NomFichier, false)}
+                        disabled={downloadingDoc === doc.idFichier}
+                        className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Télécharger le PDF"
+                      >
+                        {downloadingDoc === doc.idFichier ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                        ) : (
+                          <Download className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 ))
               ) : (

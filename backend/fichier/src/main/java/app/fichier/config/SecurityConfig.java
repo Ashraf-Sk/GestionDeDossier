@@ -38,7 +38,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) 
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfiguration())) // CORS doit être configuré en premier
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/demande/**").permitAll()
                 .requestMatchers("/auth/**").permitAll()
@@ -47,7 +48,8 @@ public class SecurityConfig {
                 .requestMatchers("/stats/getCentroid").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN") 
                 .anyRequest().authenticated()
-            ).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).cors(cors -> cors.configurationSource(corsConfiguration()))
+            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(intercepteur, UsernamePasswordAuthenticationFilter.class)
             ;
         return http.build();
@@ -59,10 +61,12 @@ public class SecurityConfig {
     @Bean 
     public CorsConfigurationSource corsConfiguration(){
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+        // Autoriser les origines spécifiques pour le développement
+        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"));
         config.setAllowCredentials(true);
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setExposedHeaders(List.of("*"));
         var url = new UrlBasedCorsConfigurationSource();
         url.registerCorsConfiguration("/**", config);
         return url;

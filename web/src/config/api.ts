@@ -14,6 +14,7 @@ export const API_CONFIG = {
     ADMIN_DEMANDES: '/admin/demandes',
     ADMIN_DETAILS: '/admin/details',
     ADMIN_UPDATE_STATUS: '/admin/demande',
+    ADMIN_DOWNLOAD_DOCUMENT: '/admin/document',
     
     // Stats
     STATS: '/stats/getStats',

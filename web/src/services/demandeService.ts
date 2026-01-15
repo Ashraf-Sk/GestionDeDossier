@@ -57,7 +57,7 @@ export const demandeService = {
     return response.data;
   },
 
-  // Télécharger un document
+  // Télécharger un document (USER)
   async downloadDocument(
     documentId: string,
     cin: string,
@@ -67,6 +67,33 @@ export const demandeService = {
       `${API_CONFIG.ENDPOINTS.DOWNLOAD_DOCUMENT}/${documentId}`,
       {
         params: { cin, demandeId },
+        responseType: 'blob',
+      }
+    );
+    return response.data;
+  },
+
+  // Télécharger un document (ADMIN)
+  async downloadDocumentAsAdmin(documentId: string): Promise<Blob> {
+    // S'assurer que le documentId n'est pas déjà encodé
+    let cleanDocumentId = documentId;
+    try {
+      // Si le documentId contient des caractères encodés, le décoder d'abord
+      if (documentId.includes('%')) {
+        // Essayer de décoder pour éviter le double encodage
+        cleanDocumentId = decodeURIComponent(documentId);
+      }
+    } catch (e) {
+      // Si le décodage échoue, utiliser l'original tel quel
+      cleanDocumentId = documentId;
+    }
+    
+    // Encoder une seule fois pour les caractères spéciaux dans l'URL
+    const encodedDocumentId = encodeURIComponent(cleanDocumentId);
+    
+    const response = await api.get<Blob>(
+      `${API_CONFIG.ENDPOINTS.ADMIN_DOWNLOAD_DOCUMENT}/${encodedDocumentId}`,
+      {
         responseType: 'blob',
       }
     );
