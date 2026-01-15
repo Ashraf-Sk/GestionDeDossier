@@ -1,8 +1,16 @@
 // Configuration de l'API Backend
 export const API_CONFIG = {
-  BASE_URL: 'http://172.36.2.57:8000', // Pour émulateur Android
-  // BASE_URL: 'http://localhost:8000', // Pour iOS Simulator
-  // BASE_URL: 'http://YOUR_IP:8000', // Pour device physique (trouvez votre IP avec ipconfig/ifconfig)
+  // Pour émulateur Android : utilisez 10.0.2.2 (adresse spéciale de l'émulateur)
+  // BASE_URL: 'http://10.0.2.2:8000',
+  
+  // Pour iOS Simulator : utilisez localhost (fonctionne directement)
+  // BASE_URL: 'http://localhost:8000',
+  
+  // Pour device physique (iPhone ou Android) : utilisez l'IP locale de votre PC
+  // Votre IP actuelle détectée : 172.36.2.9
+  BASE_URL: 'http://172.36.2.9:8000', // Device physique - iPhone/Android
+  
+  // IMPORTANT : Assurez-vous que votre iPhone et votre PC sont sur le même réseau WiFi !
   ENDPOINTS: {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',

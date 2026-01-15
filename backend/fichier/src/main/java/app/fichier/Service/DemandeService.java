@@ -22,6 +22,7 @@ import app.fichier.DTO.AdminDemande;
 import app.fichier.DTO.AdminDetailsDemande;
 import app.fichier.DTO.DemandeReponse;
 import app.fichier.DTO.DemandeRequete;
+import app.fichier.DTO.PublicDemande;
 import app.fichier.Entity.Commune;
 import app.fichier.Entity.Demande;
 import app.fichier.Entity.Document;
@@ -215,14 +216,15 @@ public class DemandeService {
 
   Specification<Demande> spec = null;
 
-  if (statut != null) {
-    spec = DemandeSpecification.byStatus(statut);
+  // Appliquer les filtres seulement s'ils ne sont pas null et pas vides
+  if (statut != null && !statut.trim().isEmpty()) {
+    spec = DemandeSpecification.byStatus(statut.trim());
   }
-  if (commune != null) {
-    spec = (spec == null) ? DemandeSpecification.byCommune(commune) : spec.and(DemandeSpecification.byCommune(commune));
+  if (commune != null && !commune.trim().isEmpty()) {
+    spec = (spec == null) ? DemandeSpecification.byCommune(commune.trim()) : spec.and(DemandeSpecification.byCommune(commune.trim()));
   }
-  if (type != null) {
-    spec = (spec == null) ? DemandeSpecification.byType(type) : spec.and(DemandeSpecification.byType(type));
+  if (type != null && !type.trim().isEmpty()) {
+    spec = (spec == null) ? DemandeSpecification.byType(type.trim()) : spec.and(DemandeSpecification.byType(type.trim()));
   }
 
   return (spec == null ? demandeRepo.findAll(pageable) : demandeRepo.findAll(spec, pageable))
@@ -235,6 +237,41 @@ public class DemandeService {
               demande.getTypeAutorisation(),
               demande.getMotifRejet()
           ));
+}
+
+public Page<PublicDemande> listerDemandePublic(
+      Pageable pageable,
+      String statut,
+      String commune,
+      String type) {
+
+  Specification<Demande> spec = null;
+
+  // Appliquer les filtres seulement s'ils ne sont pas null et pas vides
+  if (statut != null && !statut.trim().isEmpty()) {
+    spec = DemandeSpecification.byStatus(statut.trim());
+  }
+  if (commune != null && !commune.trim().isEmpty()) {
+    spec = (spec == null) ? DemandeSpecification.byCommune(commune.trim()) : spec.and(DemandeSpecification.byCommune(commune.trim()));
+  }
+  if (type != null && !type.trim().isEmpty()) {
+    spec = (spec == null) ? DemandeSpecification.byType(type.trim()) : spec.and(DemandeSpecification.byType(type.trim()));
+  }
+
+  return (spec == null ? demandeRepo.findAll(pageable) : demandeRepo.findAll(spec, pageable))
+          .map(demande -> {
+            String nomCommune = "Non déterminée";
+            if (demande.getCommune() != null && demande.getCommune().getNomCommune() != null) {
+              nomCommune = demande.getCommune().getNomCommune();
+            }
+            return new PublicDemande(
+                demande.getId(), 
+                demande.getStatus() != null ? demande.getStatus().toString() : null, 
+                demande.getDateCreation(), 
+                demande.getTypeAutorisation(),
+                nomCommune
+            );
+          });
 }
 
   public AdminDetailsDemande getDetails(String id){

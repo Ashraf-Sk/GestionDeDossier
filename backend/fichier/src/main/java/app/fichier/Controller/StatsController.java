@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import app.fichier.DTO.ClusterResponse;
 import app.fichier.DTO.StatsResponse;
+import app.fichier.DTO.PublicStatsResponse;
 import app.fichier.Service.StatsService;
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +22,21 @@ public class StatsController {
     public ResponseEntity<StatsResponse> getStats(){
         var stats = service.getStats();
         return ResponseEntity.ok(stats);
+    }
+    @GetMapping("/public")
+    public ResponseEntity<PublicStatsResponse> getPublicStats(){
+        var stats = service.getStats();
+        // Convertir en version publique (même structure mais accessible sans auth)
+        var publicStats = new PublicStatsResponse(
+            stats.total(),
+            stats.deposees(),
+            stats.enCours(),
+            stats.acceptees(),
+            stats.rejetees(),
+            stats.parCommune(),
+            stats.parType()
+        );
+        return ResponseEntity.ok(publicStats);
     }
     @GetMapping("/getCentroid")
     public ResponseEntity<ClusterResponse> getCentroid(){

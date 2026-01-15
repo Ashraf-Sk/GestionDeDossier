@@ -30,7 +30,7 @@ const apiClient: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: 60000, // Augmenté à 60 secondes pour les opérations lourdes (upload, inscription)
 });
 
 // Intercepteur pour ajouter le token JWT
@@ -112,19 +112,45 @@ export const authService = {
       nom: userData.nom,
       prenom: userData.prenom,
     });
+    console.log('[AuthService] URL complète:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTER}`);
+    const startTime = Date.now();
     try {
       const response = await apiClient.post<string>(
         API_CONFIG.ENDPOINTS.REGISTER,
-        userData
+        userData,
+        {
+          timeout: 60000, // Timeout spécifique pour l'inscription
+        }
       );
-      console.log('[AuthService] Inscription réussie pour:', userData.email);
+      const duration = Date.now() - startTime;
+      console.log(`[AuthService] Inscription réussie pour: ${userData.email} (${duration}ms)`);
       return response.data;
     } catch (error: any) {
-      console.error('[AuthService] Erreur lors de l\'inscription:', {
-        email: userData.email,
-        status: error.response?.status,
-        message: error.response?.data || error.message,
-      });
+      const duration = Date.now() - startTime;
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        console.error('[AuthService] Timeout lors de l\'inscription:', {
+          email: userData.email,
+          duration: `${duration}ms`,
+          timeout: '60s dépassé',
+          message: 'Le serveur met trop de temps à répondre. Vérifiez la connexion réseau et que le backend est accessible.',
+        });
+      } else if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        console.error('[AuthService] Impossible de se connecter au backend:', {
+          email: userData.email,
+          baseURL: API_CONFIG.BASE_URL,
+          message: 'Le backend n\'est pas accessible à cette adresse. Vérifiez que le serveur est démarré et que l\'URL est correcte.',
+        });
+      } else {
+        console.error('[AuthService] Erreur lors de l\'inscription:', {
+          email: userData.email,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+          code: error.code,
+          duration: `${duration}ms`,
+        });
+      }
       throw error;
     }
   },
