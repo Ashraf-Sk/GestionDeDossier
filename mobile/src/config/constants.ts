@@ -85,9 +85,19 @@ export const STATUS_COLORS = {
 
 // Informations de contact
 export const CONTACT_INFO = {
-  phone: '+212 5XX-XXXXXX',
+  phone: '+212 500-000000',
   email: 'contact@gestion-dossiers.ma',
-  address: 'Adresse de l\'organisme, Ville, Maroc',
+  address: 'Agence Urbaine de casablanca, Casablanca, Maroc',
   latitude: 33.5731104,
   longitude: -7.5898434, // Coordonnées Casablanca par défaut
+};
+
+// Mapping des types de demandes vers les fichiers PDF dans les assets
+export const PROCEDURE_PDFS = {
+  'Permis de construire': require('../../assets/Construction.pdf.pdf'),
+  'Lotissement / Morcellement': require('../../assets/Construction.pdf.pdf'),
+  'Certificat de conformité': require('../../assets/Construction.pdf.pdf'),
+  'Note de renseignements urbanistiques (NRU)': require('../../assets/Construction.pdf.pdf'),
+  'Demande de démolition': require('../../assets/Construction.pdf.pdf'),
+  'Demande de dérogation urbanistique': require('../../assets/Construction.pdf.pdf'),
 };

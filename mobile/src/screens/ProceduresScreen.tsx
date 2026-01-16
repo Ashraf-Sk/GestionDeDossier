@@ -9,12 +9,15 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TYPES_DEMANDES, DOCUMENTS_REQUIS, API_CONFIG } from '../config/constants';
+import { TYPES_DEMANDES, DOCUMENTS_REQUIS, PROCEDURE_PDFS } from '../config/constants';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { demandeService } from '../services/demandeService';
+import * as Sharing from 'expo-sharing';
+import { Asset } from 'expo-asset';
 
 const ProceduresScreen = () => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
@@ -68,31 +71,47 @@ const ProceduresScreen = () => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  const slugify = (str: string) =>
-    str
-      .toLowerCase()
-      .replace(/\//g, ' ')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .trim()
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-
-  const getProcedurePdfUrl = (type: string) => {
-    const slug = slugify(type);
-    return `${API_CONFIG.BASE_URL}/procedures/${slug}.pdf`;
-  };
-
-  const openProcedurePdf = async (type: string) => {
-    const url = getProcedurePdfUrl(type);
+  const downloadProcedurePdf = async (type: string) => {
     try {
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        Alert.alert('Document introuvable', "Le PDF de la procédure n'est pas disponible.");
+      // Récupérer le fichier PDF depuis les assets
+      const pdfAsset = PROCEDURE_PDFS[type as keyof typeof PROCEDURE_PDFS];
+      
+      if (!pdfAsset) {
+        Alert.alert('Erreur', `Le PDF pour "${type}" n'est pas disponible.`);
+        return;
       }
-    } catch (e) {
-      Alert.alert('Erreur', "Impossible d'ouvrir le PDF pour le moment.");
+
+      console.log('[ProceduresScreen] Téléchargement du PDF pour:', type);
+
+      // Vérifier si Sharing est disponible
+      const isAvailable = await Sharing.isAvailableAsync();
+      
+      if (!isAvailable) {
+        Alert.alert('Erreur', 'Le partage de fichiers n\'est pas disponible sur cet appareil.');
+        return;
+      }
+
+      // Utiliser Asset pour obtenir l'URI locale du fichier
+      const asset = Asset.fromModule(pdfAsset);
+      await asset.downloadAsync();
+
+      if (asset.localUri) {
+        // Partager/télécharger le fichier
+        await Sharing.shareAsync(asset.localUri, {
+          mimeType: 'application/pdf',
+          dialogTitle: `Télécharger ${type}`,
+        });
+        
+        console.log('[ProceduresScreen] PDF partagé avec succès');
+      } else {
+        throw new Error('Impossible de charger le fichier PDF');
+      }
+    } catch (error: any) {
+      console.error('[ProceduresScreen] Erreur lors du téléchargement:', error);
+      Alert.alert(
+        'Erreur',
+        `Impossible de télécharger le PDF: ${error.message || 'Erreur inconnue'}`
+      );
     }
   };
 
@@ -148,7 +167,7 @@ const ProceduresScreen = () => {
 
                     <TouchableOpacity 
                       style={styles.pdfActionButton}
-                      onPress={() => openProcedurePdf(procedure.type)}
+                      onPress={() => downloadProcedurePdf(procedure.type)}
                     >
                       <Icon name="file-pdf-box" size={20} color="#fff" />
                       <Text style={styles.pdfActionButtonText}>Télécharger la procédure</Text>
