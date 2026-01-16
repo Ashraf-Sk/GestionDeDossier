@@ -18,6 +18,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { demandeService } from '../services/demandeService';
 import { TYPES_DEMANDES, DOCUMENTS_REQUIS } from '../config/constants';
 import * as DocumentPicker from 'expo-document-picker';
+import * as Clipboard from 'expo-clipboard';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type CreateDemandeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -115,10 +116,30 @@ const CreateDemandeScreen = () => {
         allFiles
       );
 
+      const copyIdToClipboard = async () => {
+        try {
+          await Clipboard.setStringAsync(response.idDemande);
+          Alert.alert('Copié', `L'ID de la demande (${response.idDemande}) a été copié dans le presse-papiers`);
+        } catch (error) {
+          Alert.alert('Erreur', 'Impossible de copier l\'ID');
+        }
+      };
+
       Alert.alert(
         'Succès',
-        `Votre demande a été créée avec succès.\nN° de demande: ${response.idDemande}`,
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
+        `Votre demande a été créée avec succès.\n\nN° de demande: ${response.idDemande}\n\nVous pouvez copier cet ID pour le sauvegarder ou le partager.`,
+        [
+          { 
+            text: 'Copier l\'ID', 
+            onPress: copyIdToClipboard,
+            style: 'default' 
+          },
+          { 
+            text: 'OK', 
+            onPress: () => navigation.goBack(),
+            style: 'cancel' 
+          }
+        ]
       );
     } catch (error: any) {
       Alert.alert(

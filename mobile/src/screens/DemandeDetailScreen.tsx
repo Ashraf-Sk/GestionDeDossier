@@ -14,6 +14,7 @@ import { STATUS_COLORS } from '../config/constants';
 import { DocumentResponse } from '../services/demandeService';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import * as Clipboard from 'expo-clipboard';
 
 type DemandeDetailRouteProp = RouteProp<RootStackParamList, 'DemandeDetail'>;
 
@@ -62,6 +63,15 @@ const DemandeDetailScreen = () => {
     });
   };
 
+  const copyIdToClipboard = async () => {
+    try {
+      await Clipboard.setStringAsync(demande.idDemande);
+      Alert.alert('Copié', `L'ID de la demande (${demande.idDemande}) a été copié dans le presse-papiers`);
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de copier l\'ID');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -83,7 +93,14 @@ const DemandeDetailScreen = () => {
             <Icon name="file-document-outline" size={18} color="#6B7280" />
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>N° Demande</Text>
-              <Text style={styles.infoValue}>{demande.idDemande}</Text>
+              <TouchableOpacity 
+                style={styles.idContainer}
+                onPress={copyIdToClipboard}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.infoValue}>{demande.idDemande}</Text>
+                <Icon name="content-copy" size={18} color="#1565C0" style={styles.copyIcon} />
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -266,6 +283,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0F172A',
     fontWeight: '700',
+    flex: 1,
+  },
+  idContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  copyIcon: {
+    marginLeft: 4,
   },
   motifText: {
     fontSize: 13,

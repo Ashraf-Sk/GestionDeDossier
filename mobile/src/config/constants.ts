@@ -7,8 +7,8 @@ export const API_CONFIG = {
   // BASE_URL: 'http://localhost:8000',
   
   // Pour device physique (iPhone ou Android) : utilisez l'IP locale de votre PC
-  // Votre IP actuelle détectée : 172.36.2.9
-  BASE_URL: 'http://172.36.2.9:8000', // Device physique - iPhone/Android
+  // Votre IP actuelle détectée : 172.36.2.19
+  BASE_URL: 'http://172.36.2.19:8000', // Device physique - iPhone/Android
   
   // IMPORTANT : Assurez-vous que votre iPhone et votre PC sont sur le même réseau WiFi !
   ENDPOINTS: {
