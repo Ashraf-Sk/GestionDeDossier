@@ -57,19 +57,35 @@ export default function AdminDemandeDetails() {
   const handleDownloadDocument = async (documentId: string, fileName: string, openInNewTab: boolean = false) => {
     try {
       setDownloadingDoc(documentId);
+      console.log('[AdminDemandeDetails] Tentative de téléchargement, documentId:', documentId, 'fileName:', fileName);
+      
       const blob = await demandeService.downloadDocumentAsAdmin(documentId);
       
-      // Vérifier si le blob est vide ou si c'est une erreur (par exemple, un message d'erreur en JSON)
+      console.log('[AdminDemandeDetails] Blob reçu, taille:', blob.size, 'type:', blob.type);
+      
+      // Vérifier si le blob est vide
       if (blob.size === 0) {
         throw new Error('Le document est vide');
       }
       
+      // Vérifier si c'est un message d'erreur (texte au lieu d'un PDF)
+      // Les messages d'erreur sont généralement petits (< 1KB) et de type text/plain
+      if (blob.size < 1024 && blob.type === 'text/plain') {
+        const errorText = await blob.text();
+        console.error('[AdminDemandeDetails] Erreur reçue du serveur:', errorText);
+        throw new Error(errorText || 'Erreur lors du téléchargement du document');
+      }
+      
       // Créer une URL pour le blob
       const url = window.URL.createObjectURL(blob);
+      console.log('[AdminDemandeDetails] URL blob créée:', url);
       
       if (openInNewTab) {
         // Ouvrir dans un nouvel onglet
-        window.open(url, '_blank');
+        const newWindow = window.open(url, '_blank');
+        if (!newWindow) {
+          throw new Error('Impossible d\'ouvrir le document. Vérifiez que les popups ne sont pas bloquées.');
+        }
       } else {
         // Télécharger le fichier
         const link = document.createElement('a');
@@ -82,7 +98,7 @@ export default function AdminDemandeDetails() {
         setTimeout(() => window.URL.revokeObjectURL(url), 100);
       }
     } catch (err: any) {
-      console.error('Erreur lors du téléchargement:', err);
+      console.error('[AdminDemandeDetails] Erreur complète:', err);
       let errorMessage = 'Erreur lors du téléchargement du document';
       
       if (err.response?.status === 404) {
@@ -90,13 +106,18 @@ export default function AdminDemandeDetails() {
       } else if (err.response?.data) {
         // Essayer de lire le message d'erreur depuis le blob si c'est du texte
         try {
-          const text = await err.response.data.text();
-          errorMessage = text || errorMessage;
-        } catch {
+          if (err.response.data instanceof Blob) {
+            const text = await err.response.data.text();
+            errorMessage = text || errorMessage;
+          } else {
+            errorMessage = err.response.data.message || errorMessage;
+          }
+        } catch (e) {
+          console.error('[AdminDemandeDetails] Erreur lors de la lecture du message d\'erreur:', e);
           errorMessage = err.response.data.message || errorMessage;
         }
-      } else {
-        errorMessage = err.message || errorMessage;
+      } else if (err.message) {
+        errorMessage = err.message;
       }
       
       alert(errorMessage);

@@ -6,6 +6,7 @@ import app.fichier.DTO.updateDemande;
 import app.fichier.Service.DemandeService;
 import app.fichier.Service.DocumentService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/admin")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
+@Slf4j
 public class AdminController {
     private final DemandeService service;
     private final DocumentService documentService;
@@ -57,8 +59,26 @@ public class AdminController {
     @GetMapping("/document/{documentId:.+}")
     public ResponseEntity<?> downloadDocument(@PathVariable String documentId) {
         try {
-            // Spring décode automatiquement le documentId, mais on peut logger pour debug
-            Resource resource = documentService.getDocument(documentId);
+            log.info("[AdminController] Tentative de téléchargement du document (raw): {}", documentId);
+            
+            // Spring décode automatiquement le documentId depuis l'URL
+            // Mais si le documentId contient des caractères spéciaux, il peut être double-encodé
+            // On essaie de le décoder une fois de plus si nécessaire
+            String cleanDocumentId = documentId;
+            try {
+                // Si le documentId contient des caractères encodés, le décoder
+                if (documentId.contains("%")) {
+                    cleanDocumentId = java.net.URLDecoder.decode(documentId, java.nio.charset.StandardCharsets.UTF_8);
+                    log.info("[AdminController] DocumentId décodé: {}", cleanDocumentId);
+                }
+            } catch (Exception e) {
+                log.warn("[AdminController] Impossible de décoder documentId, utilisation de l'original: {}", e.getMessage());
+                cleanDocumentId = documentId;
+            }
+            
+            log.info("[AdminController] DocumentId final utilisé: {}", cleanDocumentId);
+            Resource resource = documentService.getDocument(cleanDocumentId);
+            log.info("[AdminController] Document trouvé: {}", resource.getFilename());
             String contentType = MediaType.APPLICATION_PDF_VALUE; // Par défaut PDF
             
             // Détecter le type MIME à partir de l'extension du fichier
@@ -91,12 +111,15 @@ public class AdminController {
                 // Si la détection échoue, utiliser PDF par défaut
             }
             
+            log.info("[AdminController] Envoi du document avec Content-Type: {}", contentType);
             return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
         } catch (Exception e) {
+            log.error("[AdminController] Erreur lors du téléchargement du document {}: {}", documentId, e.getMessage(), e);
             return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+                .contentType(MediaType.TEXT_PLAIN)
                 .body("Document introuvable: " + e.getMessage());
         }
     }

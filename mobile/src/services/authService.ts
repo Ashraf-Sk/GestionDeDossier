@@ -127,6 +127,20 @@ export const authService = {
       return response.data;
     } catch (error: any) {
       const duration = Date.now() - startTime;
+      
+      // Gestion spécifique des erreurs réseau
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        console.error('[AuthService] Erreur réseau lors de l\'inscription:', {
+          email: userData.email,
+          duration: `${duration}ms`,
+          code: error.code,
+          message: error.message,
+          baseURL: API_CONFIG.BASE_URL,
+          suggestion: 'Vérifiez que le backend est démarré et accessible depuis votre appareil',
+        });
+        throw new Error('Impossible de se connecter au serveur. Vérifiez votre connexion réseau et que le backend est démarré sur ' + API_CONFIG.BASE_URL);
+      }
+      
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         console.error('[AuthService] Timeout lors de l\'inscription:', {
           email: userData.email,
